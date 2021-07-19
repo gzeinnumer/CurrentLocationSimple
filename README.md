@@ -1,9 +1,7 @@
 # CurrentLocationSimple
  
-- [GetCurrentLocationInterval.java](https://github.com/gzeinnumer/CuurentLocationOneHit/blob/master/app/src/main/java/com/gzeinnumer/cuurentlocationonehit/GetCurrentLocationInterval.java)
-- [GetCurrentLocationOneHit.java](https://github.com/gzeinnumer/CuurentLocationOneHit/blob/master/app/src/main/java/com/gzeinnumer/cuurentlocationonehit/GetCurrentLocationOneHit.java)
-- [MainActivity.java](https://github.com/gzeinnumer/CuurentLocationOneHit/blob/master/app/src/main/java/com/gzeinnumer/cuurentlocationonehit/MainActivity.java)
-- [PermissionActivity.java](https://github.com/gzeinnumer/CuurentLocationOneHit/blob/master/app/src/main/java/com/gzeinnumer/cuurentlocationonehit/PermissionActivity.java)
+- [GetCurrentLocationInterval.java](https://github.com/gzeinnumer/CurrentLocationSimple/blob/master/app/src/main/java/com/gzeinnumer/currentlocationsimple/GetCurrentLocationInterval.java)
+- [MainActivity.java](https://github.com/gzeinnumer/CurrentLocationSimple/blob/master/app/src/main/java/com/gzeinnumer/currentlocationsimple/MainActivity.java)
 
 ```gradle
 // location play services
