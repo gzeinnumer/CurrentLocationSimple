@@ -50,6 +50,7 @@ public class GetCurrentLocationInterval {
     private Activity activity;
     private FunCallBack funCallBack;
     private static final int REQUEST_CHECK_SETTINGS = 100;
+    private boolean isMockLocation = false;
 
     public void setMRequestingLocationUpdates() {
         mRequestingLocationUpdates = false;
@@ -60,8 +61,9 @@ public class GetCurrentLocationInterval {
     }
 
     interface FunCallBack{
-        void updateLocationUIBase();
-        void toggleButtonsBase();
+        void updateLocation(Location mCurrentLocation);
+        void isServiceRunning(boolean isServiceRunning);
+        void isMock(boolean isMockLocation);
     }
 
     public GetCurrentLocationInterval(Activity activity, FunCallBack funCallBack) {
@@ -77,7 +79,11 @@ public class GetCurrentLocationInterval {
                 mCurrentLocation = locationResult.getLastLocation();
                 mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
 
-                funCallBack.updateLocationUIBase();
+                funCallBack.updateLocation(mCurrentLocation);
+                if (mCurrentLocation != null) {
+                    isMockLocation = mCurrentLocation.isFromMockProvider();
+                    funCallBack.isMock(isMockLocation);
+                }
             }
         };
 
@@ -93,18 +99,22 @@ public class GetCurrentLocationInterval {
         mLocationSettingsRequest = builder.build();
     }
 
-    public void startLocationUpdates() {
+    public void startLocationAction() {
         mSettingsClient
                 .checkLocationSettings(mLocationSettingsRequest)
                 .addOnSuccessListener(activity, locationSettingsResponse -> {
                     Log.i(TAG, "All location settings are satisfied.");
 
-                    Toast.makeText(activity.getApplicationContext(), "Started location updates!", Toast.LENGTH_SHORT).show();
+                    showMessage("Started location updates!");
 
                     //noinspection MissingPermission
                     mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
 
-                    funCallBack.updateLocationUIBase();
+                    funCallBack.updateLocation(mCurrentLocation);
+                    if (mCurrentLocation != null) {
+                        isMockLocation = mCurrentLocation.isFromMockProvider();
+                        funCallBack.isMock(isMockLocation);
+                    }
                 })
                 .addOnFailureListener(activity, e -> {
                     int statusCode = ((ApiException) e).getStatusCode();
@@ -123,17 +133,23 @@ public class GetCurrentLocationInterval {
                         case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
                             String errorMessage = "Location settings are inadequate, and cannot be " +
                                     "fixed here. Fix in Settings.";
-                            Log.e(TAG, errorMessage);
-
-                            Toast.makeText(activity, errorMessage, Toast.LENGTH_LONG).show();
+                            showMessage(errorMessage);
                     }
 
-                    funCallBack.updateLocationUIBase();
+                    funCallBack.updateLocation(mCurrentLocation);
+                    if (mCurrentLocation != null) {
+                        isMockLocation = mCurrentLocation.isFromMockProvider();
+                        funCallBack.isMock(isMockLocation);
+                    }
                 });
     }
 
+    private void showMessage(String s) {
+        Toast.makeText(activity.getApplicationContext(), s, Toast.LENGTH_SHORT).show();
+    }
 
-    public void startLocationButtonClick() {
+
+    public void startLocation() {
         // Requesting ACCESS_FINE_LOCATION using Dexter library
         Dexter.withActivity(activity)
                 .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -141,7 +157,7 @@ public class GetCurrentLocationInterval {
                     @Override
                     public void onPermissionGranted(PermissionGrantedResponse response) {
                         mRequestingLocationUpdates = true;
-                        startLocationUpdates();
+                        startLocationAction();
                     }
 
                     @Override
@@ -169,25 +185,17 @@ public class GetCurrentLocationInterval {
         activity.startActivity(intent);
     }
 
-    public void stopLocationButtonClick() {
+    public void stopLocation() {
         mRequestingLocationUpdates = false;
-        stopLocationUpdates();
+        stopLocationAction();
     }
 
-    public void stopLocationUpdates() {
+    public void stopLocationAction() {
         // Removing location updates
         mFusedLocationClient.removeLocationUpdates(mLocationCallback).addOnCompleteListener(activity, task -> {
-            Toast.makeText(activity.getApplicationContext(), "Location updates stopped!", Toast.LENGTH_SHORT).show();
-            funCallBack.toggleButtonsBase();
+            showMessage("Location updates stopped!");
+            funCallBack.isServiceRunning(mRequestingLocationUpdates);
         });
-    }
-
-    public void showLastKnownLocation() {
-        if (mCurrentLocation != null) {
-            Toast.makeText(activity.getApplicationContext(), "Lat: " + mCurrentLocation.getLatitude() + ", Lng: " + mCurrentLocation.getLongitude(), Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(activity.getApplicationContext(), "Last known location is not available!", Toast.LENGTH_SHORT).show();
-        }
     }
 
     public boolean checkPermissions() {
@@ -201,5 +209,9 @@ public class GetCurrentLocationInterval {
 
     public String getmLastUpdateTime() {
         return mLastUpdateTime;
+    }
+
+    public boolean isMockLocation() {
+        return isMockLocation;
     }
 }

@@ -1,20 +1,16 @@
 package com.gzeinnumer.currentlocationsimple;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.app.Activity;
-import android.content.Intent;
+import android.annotation.SuppressLint;
+import android.location.Location;
 import android.os.Bundle;
-import android.util.Log;
 
 import com.gzeinnumer.currentlocationsimple.databinding.ActivityMainBinding;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivityInterval {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private ActivityMainBinding binding;
 
-    private static final int REQUEST_CHECK_SETTINGS = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,88 +20,51 @@ public class MainActivity extends AppCompatActivity {
 
         // initialize the necessary libraries
         init();
-
-        initOnClick();
     }
-
-    private void initOnClick() {
-        binding.btnStartUpdates.setOnClickListener(view -> {
-            currentLocation.startLocationButtonClick();
-        });
-        binding.btnStopUpdates.setOnClickListener(view -> {
-            currentLocation.stopLocationButtonClick();
-        });
-        binding.btnGetLastLocation.setOnClickListener(view -> {
-            currentLocation.showLastKnownLocation();
-        });
-    }
-
-    private void updateLocationUI() {
-        if (currentLocation.getmCurrentLocation() != null) {
-            binding.txtLocationResult.setText("Lat: " + currentLocation.getmCurrentLocation().getLatitude() + ", " + "Lng: " + currentLocation.getmCurrentLocation().getLongitude());
-
-            // giving a blink animation on TextView
-            binding.txtLocationResult.setAlpha(0);
-            binding.txtLocationResult.animate().alpha(1).setDuration(300);
-            binding.txtUpdatedOn.setText("Last updated on: " + currentLocation.getmLastUpdateTime());
-        }
-
-        toggleButtons();
-    }
-
-    private void toggleButtons() {
-        binding.btnStartUpdates.setEnabled(!currentLocation.getmRequestingLocationUpdates());
-        binding.btnStopUpdates.setEnabled(currentLocation.getmRequestingLocationUpdates());
-    }
-
-    private GetCurrentLocationInterval currentLocation;
 
     private void init() {
-        currentLocation = new GetCurrentLocationInterval(MainActivity.this, new GetCurrentLocationInterval.FunCallBack() {
+        this.currentLocation = new GetCurrentLocationInterval(MainActivity.this, new GetCurrentLocationInterval.FunCallBack() {
+            @SuppressLint("SetTextI18n")
             @Override
-            public void updateLocationUIBase() {
-                updateLocationUI();
+            public void updateLocation(Location location) {
+                if (location != null) {
+                    binding.txtLocationResult.setText(
+                            "Lat: " + location.getLatitude() +
+                                    ",\nLng: " + location.getLongitude() +
+                                    ",\nLast updated on: " + currentLocation.getmLastUpdateTime());
+
+                    // giving a blink animation on TextView
+                    binding.txtLocationResult.setAlpha(0);
+                    binding.txtLocationResult.animate().alpha(1).setDuration(300);
+                }
             }
 
             @Override
-            public void toggleButtonsBase() {
-                toggleButtons();
+            public void isServiceRunning(boolean isServiceRunning) {
+                //if    isServiceRunning true   disable btnStart and enable btnStop
+                //esle  isServiceRunning false  enable  btnStart and disable btnStop
+            }
+
+            @Override
+            public void isMock(boolean isMockLocation) {
+                binding.txtIsMock.setText("Is Mock : "+isMockLocation);
+                if (isMockLocation){
+                    binding.txtIsMockFinal.setText("Mock location active, do something");
+                }
             }
         });
-    }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        // Check for the integer request code originally supplied to startResolutionForResult().
-        if (requestCode == REQUEST_CHECK_SETTINGS) {
-            switch (resultCode) {
-                case Activity.RESULT_OK:
-                    Log.i(TAG, "User agreed to make required location settings changes.");
-                    // Nothing to do. startLocationupdates() gets called in onResume again.
-                    break;
-                case Activity.RESULT_CANCELED:
-                    Log.i(TAG, "User chose not to make required location settings changes.");
-                    currentLocation.setMRequestingLocationUpdates();
-                    break;
-            }
-        }
-    }
+        //start service
+        this.currentLocation.startLocation();
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (currentLocation.getmRequestingLocationUpdates() && currentLocation.checkPermissions()) {
-            currentLocation.startLocationUpdates();
-        }
-        updateLocationUI();
-    }
+        //stop service
+        this.currentLocation.stopLocation();
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (currentLocation.getmRequestingLocationUpdates()) {
-            currentLocation.stopLocationUpdates();
+        if (this.currentLocation.getmCurrentLocation() != null) {
+            String lat = this.currentLocation.getmCurrentLocation().getLatitude()+"";
+            String lng = this.currentLocation.getmCurrentLocation().getLongitude()+"";
+            String time = this.currentLocation.getmLastUpdateTime();
+            boolean isMockLocatio = this.currentLocation.isMockLocation();
         }
     }
 }
