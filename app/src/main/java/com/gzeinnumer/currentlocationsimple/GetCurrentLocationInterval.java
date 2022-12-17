@@ -60,7 +60,7 @@ public class GetCurrentLocationInterval {
         return mRequestingLocationUpdates;
     }
 
-    interface FunCallBack{
+    public interface FunCallBack{
         void updateLocation(Location mCurrentLocation);
         void isServiceRunning(boolean isServiceRunning);
         void isMock(boolean isMockLocation);
